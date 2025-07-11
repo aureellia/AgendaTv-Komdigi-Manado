@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pantauan Surat Masuk</title>
+  <link rel="stylesheet" href="page 1.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    .center-header { text-align: center; flex: 1; }
+    .brand-header-title { font-size: 36px; font-weight: 600; color: whitesmoke; }
+    .brand-subtitle { font-size: 24px; font-weight: 400; color: whitesmoke; }
+    .jam { font-size: 24px; color: whitesmoke; }
+  </style>
+</head>
+<body>
+  <div class="container">
+   <div class="top-bar">
+  <!-- LOGO + BRAND -->
+  <div class="logo">
+    <img src="Untitled design (44).png" alt="Logo Kominfo" />
+    <div class="brand">
+      <div class="brand-top">BPSDMP KOMINFO</div>
+      <div class="brand-bottom">MANADO</div>
+    </div>
+  </div>
+
+  <!-- JUDUL TENGAH -->
+  <div class="center-header">
+    <div class="judul-gambar-wrapper">
+      <div class="judul-text">
+        <div class="brand-header-title">AGENDA HARI INI</div>
+        <div class="brand-subtitle">YUK... KITA SELESAIKAN BERSAMA...!!!</div>
+      </div>
+      <img src="WhatsApp_Image_2025-07-10_at_17.28.13-removebg-preview.png" class="gambar-semangat" />
+    </div>
+  </div>
+
+  <!-- TANGGAL & JAM -->
+  <div class="tanggal-wrapper">
+    <div class="tanggal" id="tanggal"></div>
+    <div class="jam" id="jam"></div>
+  </div>
+</div>
+
+
+      <div class="tanggal-wrapper">
+        <div class="tanggal" id="tanggal"></div>
+        <div class="jam" id="jam"></div>
+      </div>
+    </div>
+
+    <!-- TABEL -->
+    <div class="table-wrapper">
+      <table id="data-table">
+        <thead>
+          <tr>
+            <th>Agenda Surat</th>
+            <th>Asal Surat</th>
+            <th>Disposisi</th>
+            <th>Batas Waktu</th>
+            <th>Keterangan</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- RUNNING TEXT -->
+  <div class="footer">
+    <div class="running-text-wrapper">
+      <div class="running-text">
+        <img src="Untitled design (44).png" alt="Logo" />
+        BPSDMP Kominfo Manado SIAP! (Sinergi, Inovatif, Adaptif, Profesional)
+        <img src="Untitled design (44).png" alt="Logo" />
+        BPSDMP Kominfo Manado SIAP! (Sinergi, Inovatif, Adaptif, Profesional)
+        <img src="Untitled design (44).png" alt="Logo" />
+        BPSDMP Kominfo Manado SIAP! (Sinergi, Inovatif, Adaptif, Profesional)
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT -->
+  <script>
+    // Tanggal dan Jam
+    document.getElementById("tanggal").textContent = new Date().toLocaleDateString("id-ID", {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
+
+    function updateJam() {
+      const now = new Date();
+      const jamStr = now.toLocaleTimeString("id-ID", {
+        hour: '2-digit', minute: '2-digit', hour12: false
+      });
+      document.getElementById("jam").textContent = jamStr;
+    }
+    setInterval(updateJam, 1000);
+    updateJam();
+
+    // Parsing Tanggal Indonesia
+    function parseTanggalIndonesia(teks) {
+      const bulanMap = {
+        Jan: 0, Jan: 0,
+        Feb: 1, Feb: 1,
+        Mar: 2, Mar: 2,
+        Apr: 3, Apr: 3,
+        Mei: 4,
+        Jun: 5, Jun: 5,
+        Jul: 6, Jul: 6,
+        Agt: 7, Agt: 7,
+        Sep: 8, Sep: 8,
+        Okt: 9, Okt: 9,
+        Nov: 10, Nov: 10,
+        Des: 11, Des: 11
+      };
+      const parts = teks.trim().split(" ");
+      if (parts.length !== 3) return NaN;
+      const hari = parseInt(parts[0]);
+      const bulan = bulanMap[parts[1]];
+      const tahun = parseInt(parts[2]);
+      if (isNaN(hari) || isNaN(bulan) || isNaN(tahun)) return NaN;
+      return new Date(tahun, bulan, hari);
+    }
+
+    // Load Data dari Google Sheet
+    const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR5K0-jE0oircyC2bCDw58TdiQoSqmkIWx43A9XerdqcSuB1E1IaszzXiOsMaD9rxzfKLKF7b4gmaf1/pub?output=csv";
+
+    async function loadData() {
+      const response = await fetch(sheetURL + "&t=" + new Date().getTime());
+      const data = await response.text();
+      const rows = data
+        .split("\n")
+        .slice(1)
+        .filter(row => row.split(",").filter(cell => cell.trim() !== "").length >= 5);
+
+      const tbody = document.querySelector("#data-table tbody");
+      tbody.innerHTML = "";
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      rows.forEach((row, index) => {
+        const cols = row.split(",");
+        const tr = document.createElement("tr");
+        tr.style.backgroundColor = index % 2 === 0 ? "#fffff" : "949494";
+
+        cols.forEach((col, i) => {
+          const td = document.createElement("td");
+          const text = col.trim();
+
+          if (i === 3) {
+            const deadline = parseTanggalIndonesia(text);
+            if (deadline instanceof Date && !isNaN(deadline)) {
+              deadline.setHours(0, 0, 0, 0);
+              const selisihHari = Math.ceil((deadline - today) / (1000 * 60 * 60 * 24));
+              let warna = "orange", label = "(SEGERA DIPROSES)";
+
+              if (selisihHari < 0) {
+                warna = "red";
+                label = "(LEWAT BATAS WAKTU)";
+              } else if (selisihHari === 0) {
+                warna = "red";
+                label = "(HARI INI)";
+              } else if (selisihHari <= 3) {
+                warna = "red";
+                label = "(URGENT)";
+              }
+
+              td.innerHTML = `<span style="color:${warna}; font-weight:bold;">${text} ${label}</span>`;
+            } else {
+              td.textContent = text;
+            }
+          } else {
+            td.textContent = text;
+            if (i === 2) td.style.fontWeight = "bold";
+          }
+
+          tr.appendChild(td);
+        });
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    loadData();
+    setInterval(loadData, 60000); // update tiap menit
+  </script>
+</body>
+</html>
